@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Thorough secret scan for this repository — run before any public push.
+"""Thorough secret scan for a git repository — run before any public push.
 
 Scans every tracked file AND every git blob across all history for high-signal
 secret patterns: API keys in all common formats (any length), cookies, private
@@ -8,8 +8,9 @@ positives are filtered out. Prints matches with file + line so each can be
 judged. Exit code 0 = clean, 1 = hits found.
 
 Usage:
-    python scripts/secret_scan.py
+    python scripts/secret_scan.py [REPO_PATH]   # default: this repository
 """
+import argparse
 import re
 import subprocess
 import sys
@@ -81,17 +82,27 @@ def scan_text(text: str, label: str) -> list[str]:
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("target", nargs="?", default=str(REPO),
+                        help="path to a git repo to scan (default: this repo)")
+    args = parser.parse_args()
+    repo = Path(args.target).resolve()
+    if not (repo / ".git").exists() and not repo.is_dir():
+        parser.error(f"not a git repo: {repo}")
+    print(f"scanning {repo} ...")
+
     all_hits: list[str] = []
 
     # 1. tracked files in the working tree
-    tracked = subprocess.run(["git", "ls-files"], cwd=REPO,
-                             capture_output=True, text=True).stdout.splitlines()
+    tracked = subprocess.run(["git", "ls-files"], cwd=repo,
+                             capture_output=True, text=True,
+                             encoding="utf-8", errors="replace").stdout.splitlines()
     for rel in tracked:
-        p = REPO / rel
+        p = repo / rel
         if not p.is_file():
             continue
         if p.suffix.lower() in (".png", ".jpg", ".jpeg", ".gif", ".webp"):
-            continue  # binary fixtures, synthetic by construction
+            continue  # binary fixtures
         try:
             text = p.read_text(encoding="utf-8", errors="replace")
         except OSError:
@@ -99,8 +110,9 @@ def main() -> int:
         all_hits.extend(scan_text(text, rel))
 
     # 2. every textual blob in git history (all commits)
-    blobs = subprocess.run(["git", "rev-list", "--all", "--objects"], cwd=REPO,
-                           capture_output=True, text=True).stdout.splitlines()
+    blobs = subprocess.run(["git", "rev-list", "--all", "--objects"], cwd=repo,
+                           capture_output=True, text=True,
+                           encoding="utf-8", errors="replace").stdout.splitlines()
     seen_blobs: set[str] = set()
     for line in blobs:
         parts = line.split()
@@ -110,7 +122,7 @@ def main() -> int:
         if blob in seen_blobs:
             continue
         seen_blobs.add(blob)
-        data = subprocess.run(["git", "cat-file", "blob", blob], cwd=REPO,
+        data = subprocess.run(["git", "cat-file", "blob", blob], cwd=repo,
                               capture_output=True).stdout
         if len(data) > 200_000:
             continue
@@ -123,11 +135,12 @@ def main() -> int:
         all_hits.extend(scan_text(text, f"git:{' '.join(parts[1:]) or blob[:8]}"))
 
     if all_hits:
-        print("=== HITS (review each) ===")
+        print(f"=== {len(set(all_hits))} unique HITS in {repo.name} (review each) ===")
         for h in sorted(set(all_hits)):
             print(h)
         return 1
-    print("CLEAN: no keys / cookies / private keys / tokens in tracked files or git history.")
+    print(f"CLEAN: no keys / cookies / private keys / tokens in {repo.name} "
+          "(tracked files or git history).")
     return 0
 
 
