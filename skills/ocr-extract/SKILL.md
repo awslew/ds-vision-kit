@@ -2,8 +2,9 @@
 name: ocr-extract
 description: >
   把图片里的文字逐字提取为结构化 Markdown：正文/代码/表格。OCR 文字提取、
-  表格转 Markdown、扫描件转录、长截图/聊天记录转文本。当用户说"把这张图的
-  文字/表格提取出来""转录这段截图""这个扫描件转文字"时使用。
+  表格转 Markdown、扫描件转录、长截图/聊天记录转文本。用户说"把这张图的
+  文字/表格提取出来""OCR""转录这段截图""这个扫描件转文字""表格转markdown"
+  并给图时自动触发。
 metadata:
   version: "1.0"
   category: ocr

@@ -37,6 +37,19 @@
 就得改底座。拆分后，"提取表格""读图表"只是新增一个 SKILL.md，底座永远不动。
 这正是本仓库在[上游](https://github.com/Anionex/agent-vision-toolkit)之上加的唯一核心特性。
 
+## 全自动，不用手动
+
+两件事自动完成，你不需要手动作任何路由：
+
+- **Provider 自动检测 + 故障转移**：想配几个 OpenAI 兼容端点就配几个
+  （`VISION_EXTRA_PROVIDERS` + `VISION_PROVIDER_<NAME>_*`）。客户端自动探测已配置的
+  端点，当前端点报错（限流/额度耗尽/宕机）自动切下一个。`VISION_RACE=1` 全部并发、
+  先到先得。
+- **场景按意图自动分发**：你说意图（"把表格转成markdown"、"读这个图的数据"、
+  "评审这个UI"）+ 发图，description 命中的场景 skill 自动触发；即使落到 vision-core，
+  它也会读对应场景的 SKILL.md 严格按它的 pass/prompt/输出格式执行。你永远不用点名
+  场景名，也不用点名 provider。
+
 ## 快速开始
 
 ```bash

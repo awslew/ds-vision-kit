@@ -43,6 +43,20 @@ split, adding "extract this table" or "read this chart" is just a new SKILL.md
 — the base never changes. That is the single feature this repo adds on top of
 [upstream](https://github.com/Anionex/agent-vision-toolkit).
 
+## Auto, not manual
+
+Two things happen automatically so you don't route anything by hand:
+
+- **Providers auto-detect + fail over.** Configure as many OpenAI-compatible
+  endpoints as you like (`VISION_EXTRA_PROVIDERS` + `VISION_PROVIDER_<NAME>_*`);
+  the client detects which are configured, and when the current one errors
+  (rate-limited, quota out, down) the next provider is tried automatically.
+  `VISION_RACE=1` races them, first valid answer wins.
+- **Scenes auto-route on intent.** You say the intent ("extract this table",
+  "read this chart", "review this UI") and attach the image — the scene skill
+  whose description matches is invoked, or `vision-core` reads the matching
+  scene's SKILL.md and follows it exactly. You never name a scene or a provider.
+
 ## Quick start
 
 ```bash

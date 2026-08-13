@@ -3,8 +3,8 @@ name: ui-feedback
 description: >
   给无视觉底座（DeepSeek 等）提供 UI 设计反馈的闭环：截图 → 视觉"眼睛"
   （MiMo-V2.5 等视觉模型）最大化信息量分析 → 结构化反馈报告，直接喂回给
-  设计 UI 的模型用于迭代优化。当用户提供 UI 截图、要设计评审/改进建议/
-  还原描述时使用。
+  设计 UI 的模型用于迭代优化。用户说"评审这个UI/设计反馈/界面怎么改/还原
+  这个页面/这个布局配色怎么优化"并给出 UI 截图时自动触发。
 metadata:
   version: "2.0"
   category: design-feedback

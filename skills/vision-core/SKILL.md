@@ -209,19 +209,23 @@ work outside-in:
    offsets, sizes. Get numbers from `trace`, `ground` boxes, `pixel-diff`, or
    `palette`.
 
-## Dispatch: which scene handles which request
+## Dispatch: route the request to a scene, don't improvise
 
-This core answers raw questions. For a job, hand off to the matching scene
-skill (each has its own SKILL.md with trigger + passes + prompt + output):
+This core answers raw questions. When the user hands you an image **plus an
+intent**, first decide which scene the intent matches, then READ that scene's
+SKILL.md (`../<scene>/SKILL.md`) and follow its workflow **exactly** — its tool
+passes, its prompt templates, its output format. Do not fall back to a generic
+glance description when a scene's workflow applies.
 
-| User says / wants | Scene skill |
-|---|---|
-| "评审这个 UI / 设计反馈 / 还原这个界面" | `ui-feedback` |
-| "把这张图的文字/表格转出来" | `ocr-extract` |
-| "读这个图的数据 / 图表提取" | `chart-reading` |
-| Anything else about an image | `image-qa` (or use core directly) |
+| User intent (say this, get that) | Scene skill | Read |
+|---|---|---|
+| "评审这个 UI / 设计反馈 / 还原这个界面 / 这个页面怎么改" | `ui-feedback` | `../ui-feedback/SKILL.md` |
+| "把文字/表格提取出来 / OCR / 转录 / 表格转 markdown / 扫描件转文字" | `ocr-extract` | `../ocr-extract/SKILL.md` |
+| "读这个图的数据 / 图表提取 / 柱状图/折线图/饼图的数值" | `chart-reading` | `../chart-reading/SKILL.md` |
+| Anything else about an image (describe / find / compare / judge) | `image-qa` | `../image-qa/SKILL.md` |
 
-Full dispatch table: `../references/scenes.md`.
+Full dispatch table: `../references/scenes.md`. In an installed setup the scene
+skills live next to this one under `~/.claude/skills/<scene>/`.
 
 ## Notes
 
