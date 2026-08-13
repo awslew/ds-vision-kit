@@ -19,8 +19,10 @@ REPO = Path(__file__).resolve().parents[1]
 
 # --- regexes: name -> pattern ------------------------------------------------
 PATTERNS: dict[str, re.Pattern] = {
-    # any sk- key, any length (OpenAI-style) — catches short keys too
-    "sk-any": re.compile(r"sk-[A-Za-z0-9_-]{4,}"),
+    # any sk- key, any length (OpenAI-style) — catches short keys too.
+    # The negative lookahead stops the scanner from flagging its own "sk-ant-"
+    # pattern definition; real Anthropic keys are caught by the sk-ant pattern.
+    "sk-any": re.compile(r"sk-(?!ant-)[A-Za-z0-9_-]{4,}"),
     # Anthropic
     "sk-ant": re.compile(r"sk-ant-[A-Za-z0-9_-]{10,}"),
     # Google
