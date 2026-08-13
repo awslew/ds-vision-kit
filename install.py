@@ -54,13 +54,18 @@ def write_shim(bin_dir: Path, name: str, script: Path, python: str, dry_run: boo
     bin_dir.mkdir(parents=True, exist_ok=True)
     shim = bin_dir / name
     # POSIX shim (works in Git Bash on Windows, and everywhere on macOS/Linux).
-    shim.write_text(f"#!/bin/sh\nexec {python} \"{script}\" \"$@\"\n", encoding="utf-8")
+    # Use forward-slash paths and quote everything: backslashes are eaten by the
+    # shell ("C:\Users" -> "C:Users") and an unquoted Windows path breaks exec.
+    python_fs = str(Path(python).as_posix())
+    script_fs = str(script.as_posix())
+    shim.write_text(
+        f'#!/bin/sh\nexec "{python_fs}" "{script_fs}" "$@"\n', encoding="utf-8")
     try:
         shim.chmod(0o755)
     except OSError:
         pass
     if os.name == "nt":
-        # .cmd launcher for native cmd.exe / PowerShell.
+        # .cmd launcher for native cmd.exe / PowerShell. Backslashes are correct here.
         (bin_dir / (name + ".cmd")).write_text(
             f'@echo off\r\n"{python}" "{script}" %*\r\n', encoding="utf-8")
     action = "would write" if dry_run else "wrote"
