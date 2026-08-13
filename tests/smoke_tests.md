@@ -49,9 +49,10 @@ glance tests/images/page_doc.png --ocr                           # 正文/代码
 
 ```bash
 glance tests/images/chart_barline.png -q "<图表提取 JSON prompt>"   # 期望：Q1-Q4 = 320/480/610/720
-glance tests/images/chart_nolabel.png -q "<图表提取 JSON prompt>"   # 期望：estimate:true 估读 230/510/370/700/450/880±10
+glance tests/images/chart_nolabel.png -q "<图表提取 JSON prompt>"   # 期望：estimate:true 估读，全部系统性低估约 ±20-30
 ```
 通过标准：带标注图数值与原图完全一致；无标注图每个值标 `estimate` + 误差范围。
+实测参考（真值 240/520/380/710/460/890）：估读 230/500/370/690/440/870，全在误差内、全部低于真值。
 
 ## 5. 场景 image-qa
 

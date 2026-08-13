@@ -34,7 +34,11 @@ def build_prompt(target: str) -> str:
         f"{target}\n\n"
         'Return only a JSON array. Each item must contain "box_2d" as '
         '[y0, x0, y1, x1] on a 0-1000 grid and "label" as a short description. '
-        "Use tight boxes in the original image. Return [] when nothing matches."
+        "Use tight boxes in the original image. Return [] when nothing matches.\n"
+        "When the target names a particular instance among several similar ones "
+        "(e.g. 'the third bar', 'the second button'), first enumerate all matching "
+        "instances with their labels and positions, then select the exact one the "
+        "ordinal describes — never return the neighboring instance."
     )
 
 
