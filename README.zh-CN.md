@@ -119,6 +119,15 @@ tests/               合成测试图 + 冒烟测试
 install.py           装 PATH 命令 + 装 skills
 ```
 
+## 安全
+
+绝不把真实的 `VISION_API_KEY` 或 cookie 提交进仓库。任何公共推送前，跑一次内置扫描器
+——它检查所有入库文件 + 全部 git 历史里的 key（常见格式全覆盖）/ cookie / 私钥 / token：
+
+```bash
+python scripts/secret_scan.py   # 输出 CLEAN，或逐条列出命中供人工复核
+```
+
 ## 致谢
 
 本仓库 fork 并扩展自

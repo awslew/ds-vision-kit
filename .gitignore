@@ -1,6 +1,12 @@
 # Secrets — never commit
 .env
+.env.*
+!.env.example
 *.pem
+*.key
+*.p12
+*.jks
+cookies.txt
 
 # Python
 __pycache__/

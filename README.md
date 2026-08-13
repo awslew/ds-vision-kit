@@ -128,6 +128,16 @@ tests/               synthetic fixtures + smoke tests
 install.py           put commands on PATH + install skills
 ```
 
+## Security
+
+Never commit a real `VISION_API_KEY` or cookie. Before any public push, run the
+bundled scanner — it checks every tracked file and the whole git history for
+keys (all common formats), cookies, private keys and tokens:
+
+```bash
+python scripts/secret_scan.py   # prints CLEAN, or lists each hit to review
+```
+
 ## Credits
 
 This project forks and extends [Anionex/agent-vision-toolkit](https://github.com/Anionex/agent-vision-toolkit)
