@@ -1,0 +1,16 @@
+# Secrets — never commit
+.env
+*.pem
+
+# Python
+__pycache__/
+*.pyc
+
+# Local test artifacts (personal photos, generated OCR output, crops)
+tests/output/
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

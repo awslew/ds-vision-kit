@@ -1,0 +1,53 @@
+---
+name: <scene-name>
+description: >
+  <一句话说明这个场景做什么、何时触发。写清触发词：用户说什么样的话/给什么样的
+  输入时，应该命中这个场景。>
+metadata:
+  version: "1.0"
+  category: <classification>
+  scene: <scene-name>
+  depends_on:
+    - vision-core
+---
+
+# <scene-name>（场景层：<中文名>）
+
+<用一两句话说明这个场景的职责和核心原则。>
+
+## 触发场景
+- <用户给什么输入、说什么话时用本场景>
+- <同类请求举例>
+
+## 工作流
+<给出 1-N 个 pass：先调用哪个底座命令，再调用哪个，每个用什么参数、什么 prompt。
+把关键 prompt 完整贴出来，不要引用外部文件。>
+
+**预处理**：最长边 >1400px 先缩到 1400（JPEG q88）——大图+长 prompt 会 HTTP 500。
+
+**Pass 1 — <名字>**（必做）
+```bash
+glance "<图>" -q "<详细 prompt>"
+```
+
+**Pass 2 — <名字>**（推荐）
+```bash
+<detect / palette / crop / trace ...>
+```
+
+## <关键 prompt 标题>
+> <把这个场景要喂给 glance 的 prompt 完整写在这里，尽量具体、可复制>
+
+## 输出格式
+```markdown
+## <场景名>结果
+<固定字段 1>：<...>
+<固定字段 2>：<...>
+<...>
+```
+
+## 工具
+- <列出依赖的 vision-core 命令>
+- 出错时如实报告视觉 API 错误，**绝不编造图片内容**。
+
+Source: <本场景的灵感来源 / 参考文献 / 实测依据>

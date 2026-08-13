@@ -1,0 +1,7 @@
+# Runtime deps. All are optional depending on which tools you use:
+#  - pillow: required by crop / trace / palette / pixel-diff / extract-fg / glance --region
+#  - numpy: required by extract-fg --auto
+#  - vtracer: required by trace (image -> SVG)
+pillow>=9.0
+numpy>=1.20
+vtracer>=0.6.0
