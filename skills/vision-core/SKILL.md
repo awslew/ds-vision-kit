@@ -6,7 +6,7 @@ description: >-
   trace (image to SVG geometry), crop (cut a pixel box to a file), plus local
   pixel tools palette / pixel-diff / extract-fg / html-shot / long-ocr. Use for
   ANY image task — the scene skills (ui-feedback, ocr-extract, chart-reading,
-  image-qa) build on this. See references/scenes.md to pick a scene.
+  image-qa) build on this. See ../references/scenes.md to pick a scene.
 metadata:
   source: https://github.com/Anionex/agent-vision-toolkit (MIT, see LICENSE)
   depends_on:
@@ -221,7 +221,7 @@ skill (each has its own SKILL.md with trigger + passes + prompt + output):
 | "读这个图的数据 / 图表提取" | `chart-reading` |
 | Anything else about an image | `image-qa` (or use core directly) |
 
-Full dispatch table: `references/scenes.md`.
+Full dispatch table: `../references/scenes.md`.
 
 ## Notes
 

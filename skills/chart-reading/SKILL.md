@@ -93,7 +93,7 @@ glance "<图>" -q "请逐项说明：哪些数值是图上直接标注的？哪�
 - **无标注、纯刻度估读**：本套件实测 ±2% 左右（如真值 710 估读 700），且有系统性
   低估倾向。这类值**必须**标注 `estimate: true` 并给误差范围。
 - **严谨验证法**（可选，做数据分析时用）：用已知数据 + matplotlib 重新生成图 → 提取 →
-  用 MAPE 对比提取值与真值，量化误差。见 references/accuracy.md。
+  用 MAPE 对比提取值与真值，量化误差。见 ../references/accuracy.md。
 
 ## 工具
 - `glance -q`（结构化提取）、`detect` / `glance --region`（小字补读）、`palette`（图例色）

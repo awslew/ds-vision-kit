@@ -99,7 +99,7 @@ detect "<截图路径>"      # 枚举全部 UI 元素，带坐标和可见文字
 
 ## 工具
 - `glance` / `ground` / `detect` / `crop` / `trace` / `palette`：vision-core 提供的命令（`python install.py` 安装）
-- 视觉模型：任意 OpenAI 兼容视觉端点（配置见 references/providers.md）
+- 视觉模型：任意 OpenAI 兼容视觉端点（配置见 ../references/providers.md）
 - 长截图/聊天记录：`long-ocr`
 - 出错时如实报告视觉 API 错误，**绝不编造图片内容**。
 

@@ -17,8 +17,8 @@
    extensionless shim → `resolve_glance_command` 会追加试 `.bat`/`.cmd`/`.exe`，且能
    找到仓库内置 bin/glance（已修）。
 5. **install.py 生成 shim 时反斜杠被 shell 吃掉**：bash 里 `exec C:\Users\...\python.exe`
-   会把 `\U`、`\h`、`\A` 的转义剥掉 → `C:Usershemou...`，报 "not found"。**解法**：shim 里
-   路径一律 `Path.as_posix()`（前斜杠）+ 加引号（已修 install.py）。
+   会把 `\U`、`\h`、`\A` 的转义剥掉 → 变成 `C:Users...`（用户目录路径全被拼掉），报
+   "not found"。**解法**：shim 里路径一律 `Path.as_posix()`（前斜杠）+ 加引号（已修 install.py）。
 6. **Windows 的 `python` 命令可能指向坏的 Python**：PATH 里残留的 `python.exe` 软链/旧
    安装可能解析到不存在或坏的 Python（0x80070003）。**解法**：用 `python3`（或 `py -3`），
    或显式 `sys.executable`；install.py 内部用 `sys.executable` 写死，不受此影响。

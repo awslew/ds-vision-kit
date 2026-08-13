@@ -78,6 +78,19 @@ def write_shim(bin_dir: Path, name: str, script: Path, python: str, dry_run: boo
 def install_skills(dry_run: bool) -> None:
     skills_src = REPO / "skills"
     skills_dst = Path.home() / ".claude" / "skills"
+
+    # Shared reference docs: the scene skills reference "../references/*.md",
+    # which resolves to <skills_dir>/references/ after install.
+    refs_src = REPO / "references"
+    refs_dst = skills_dst / "references"
+    if refs_src.is_dir() and not refs_dst.exists():
+        action = "would copy" if dry_run else "copied"
+        if dry_run:
+            print(f"[install] {action} {refs_src} -> {refs_dst}")
+        else:
+            shutil.copytree(refs_src, refs_dst)
+            print(f"[install] {action} {refs_src} -> {refs_dst}")
+
     for name in ("vision-core", "_template", "ui-feedback", "ocr-extract",
                  "chart-reading", "image-qa"):
         src = skills_src / name
