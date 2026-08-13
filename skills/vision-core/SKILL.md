@@ -230,6 +230,10 @@ skills live next to this one under `~/.claude/skills/<scene>/`.
 ## Notes
 
 - Only PNG / JPEG / GIF / WebP images are supported.
+- Small images (longest side < 800px) are auto-upscaled to 800px (LANCZOS)
+  before being sent, so small text/icons are readable; set `VISION_MIN_UPSCALE=0`
+  to disable. Upscale is uniform, so coordinates stay correct. Large images are
+  sent as-is (downscale to ~1400 is a per-scene preprocessing step).
 - If a command is not found, run `python install.py` (or install the optional
   deps) — report this to the user instead of improvising.
 - If the vision API fails, relay the error faithfully; never fabricate image

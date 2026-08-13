@@ -15,7 +15,8 @@ try:
 except ImportError:
     Image = None
 
-from core.vision_client import VisionError, describe_image, image_path_to_data_url, load_default_env
+from core.vision_client import (VisionError, describe_image, image_path_to_data_url,
+                                load_default_env, pil_image_to_data_url)
 
 
 @dataclass(frozen=True)
@@ -148,9 +149,7 @@ def locate(image_path: Path, target: str, region: str | None = None) -> list[Mat
             width, height = image.size
             if region:
                 box = _parse_region(region, width, height)
-                buffer = io.BytesIO()
-                image.crop(box).save(buffer, format="PNG")
-                url = "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode()
+                url = pil_image_to_data_url(image.crop(box))
     except (OSError, ValueError) as exc:
         raise GroundError(f"Cannot read image: {image_path}") from exc
     if box is None:

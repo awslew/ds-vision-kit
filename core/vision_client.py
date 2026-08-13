@@ -44,6 +44,7 @@ from __future__ import annotations
 
 import base64
 import http.client
+import io
 import json
 import mimetypes
 import os
@@ -175,6 +176,24 @@ def validate_vision_config() -> None:
             "failover). Fill them in the .env file.")
 
 
+def pil_image_to_data_url(image, min_side: int | None = None) -> str:
+    """Encode a PIL Image to a data URL, auto-upscaling small images so the
+    vision model can read small text/icons. Upscale is uniform, so relative
+    coordinates (ground/detect's 0-1000 grid) still map back to the original
+    pixels unchanged."""
+    from PIL import Image  # required by callers (region crops), import locally
+    if min_side is None:
+        min_side = _int_env("VISION_MIN_UPSCALE", 800)
+    if min_side > 0:
+        w, h = image.size
+        if max(w, h) < min_side:
+            factor = min_side / max(w, h)
+            image = image.resize((round(w * factor), round(h * factor)), Image.LANCZOS)
+    buffer = io.BytesIO()
+    image.save(buffer, format="PNG")
+    return "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode()
+
+
 def image_path_to_data_url(path: str | os.PathLike[str]) -> str:
     image_path = Path(path).expanduser()
     if not image_path.is_file():
@@ -182,7 +201,18 @@ def image_path_to_data_url(path: str | os.PathLike[str]) -> str:
     mime, _ = mimetypes.guess_type(image_path.name)
     if mime not in {"image/png", "image/jpeg", "image/gif", "image/webp"}:
         raise VisionError("Only PNG, JPEG, GIF, and WebP images are supported")
-    return f"data:{mime};base64,{base64.b64encode(image_path.read_bytes()).decode()}"
+    min_side = _int_env("VISION_MIN_UPSCALE", 800)
+    if min_side <= 0:
+        return f"data:{mime};base64,{base64.b64encode(image_path.read_bytes()).decode()}"
+    try:
+        from PIL import Image
+    except ImportError:
+        return f"data:{mime};base64,{base64.b64encode(image_path.read_bytes()).decode()}"
+    with Image.open(image_path) as image:
+        w, h = image.size
+        if max(w, h) >= min_side:
+            return f"data:{mime};base64,{base64.b64encode(image_path.read_bytes()).decode()}"
+        return pil_image_to_data_url(image, min_side)
 
 
 def _message_text(message: object) -> str:

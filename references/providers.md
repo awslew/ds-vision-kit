@@ -103,4 +103,5 @@ VISION_PROVIDER_ORDER=local,primary,openrouter
 | `VISION_USER_AGENT` | Chrome UA | 置空发送纯客户端 UA |
 | `VISION_ORIGIN` | 自动(opencode.ai) | 需要 Origin/Referer 的 provider 用 |
 | `VISION_MAX_TOKENS` | provider 决定 | 输出 token 上限 |
+| `VISION_MIN_UPSCALE` | `800` | 小图自动放大到该最长边（LANCZOS），`0`=关闭；坐标不受影响 |
 | `VISION_GLANCE_BIN` | 自动探测 | long-ocr 手动指定 glance 命令路径 |

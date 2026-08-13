@@ -12,6 +12,7 @@ from core.vision_client import (  # noqa: E402
     describe_image,
     image_path_to_data_url,
     load_default_env,
+    pil_image_to_data_url,
 )
 
 
@@ -24,8 +25,6 @@ def region_data_url(path, region):
         x1, y1, x2, y2 = (int(v) for v in region.split(","))
     except ValueError:
         raise VisionError("--region expects four integers: X1,Y1,X2,Y2 (pixels)")
-    import base64
-    import io
     try:
         with Image.open(Path(path).expanduser()) as image:
             width, height = image.size
@@ -33,11 +32,11 @@ def region_data_url(path, region):
                    min(width, max(x1, x2)), min(height, max(y1, y2)))
             if box[2] <= box[0] or box[3] <= box[1]:
                 raise VisionError(f"--region {region} is empty after clamping to {width}x{height}")
-            buffer = io.BytesIO()
-            image.crop(box).save(buffer, format="PNG")
+            crop = image.crop(box)
     except (OSError, ValueError) as exc:
         raise VisionError(f"Cannot read image: {path}") from exc
-    return "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode()
+    # Auto-upscale small crops too (VISION_MIN_UPSCALE) so small text/icons are readable.
+    return pil_image_to_data_url(crop)
 
 
 def build_prompt(args, count):
