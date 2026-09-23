@@ -1,0 +1,110 @@
+# ds-vision-kit
+
+> 给**纯文本 AI agent**（DeepSeek、GLM、跑在纯文本底座上的 Claude Code 等）用的通用视觉前段：给一张图，拿回**结构化文本**让文本模型能推理。架构是两层——**scene-agnostic 的视觉内核**（`glance`/`ground`/`detect`/`trace`/`crop` + 本地像素工具）+ **可插拔的场景层**（每个场景一个 Claude Code skill）。它是 [Anionex/agent-vision-toolkit](https://github.com/Anionex/agent-vision-toolkit)（MIT）的 fork 与扩展。
+
+## 项目定位
+
+- **给谁用**：主模型没有原生视觉能力的 agent 使用者；以及把视觉任务按场景（UI 评审 / OCR / 读图表）标准化的人。
+- **解决什么问题**：纯文本 agent 对图片是瞎的。本仓库把「看图」拆成两层：内核只回答原始问题（描述 / 定位 / 清点 / 几何 / 裁剪 / 取色 / 比差），场景层负责「这类任务该按什么流程、用什么 prompt 模板、输出什么格式」。
+- **和上游的差别（唯一新增点）**：加了场景层。以前新增一个识别任务要改底座；现在只需新增一个 `SKILL.md`。
+- **不是什么**：不是 OCR 云服务、不是模型路由产品；**像素级事实（颜色 / 尺寸 / 差异）不来自模型口述**，只来自本地工具。
+
+## 快速开始
+
+```bash
+# 1. 取代码
+git clone https://github.com/awslew/ds-vision-kit.git && cd ds-vision-kit
+
+# 2. 安装 Python 依赖（pillow / numpy / vtracer，按用到的工具可选）
+pip install -r requirements.txt
+
+# 3. 把命令装到 PATH，并把 skills 复制到 ~/.claude/skills
+python install.py                # 只要命令不装 skills：python install.py --no-skills
+python install.py --dry-run      # 只打印将要创建的东西，不落盘
+
+# 4. 配置一个 OpenAI 兼容的视觉端点
+cp .env.example .env             # Windows: copy .env.example .env
+# 填 VISION_API_KEY / VISION_BASE_URL / VISION_MODEL
+
+# 5. 验证
+glance tests/images/chart_barline.png -q "how many bars?"
+```
+
+`install.py` 会把 `glance ground detect trace crop palette pixel-diff extract-fg html-shot long-ocr`
+装进 PATH（Windows 上默认 `~/bin`，同时写 POSIX shim 与 `.cmd`；其他平台默认 `~/.local/bin`），
+并把 `skills/` 下的场景 skill 复制到 `~/.claude/skills/`（**目标已存在时会跳过，要重装得先删掉**）。
+装完重启 Claude Code 才会被发现。
+
+`VISION_BASE_URL` 指向任意 OpenAI 兼容端点即可：OpenRouter、OpenAI、本地 vLLM / Ollama / LM Studio、
+或 OpenCode Go 的免费档。
+
+## 核心能力
+
+**视觉内核（10 个命令，`bin/` + `scripts/`）**
+
+| 命令 | 回答什么问题 |
+|---|---|
+| `glance <image>` | 这张图是什么 / 说了什么（`--ocr` 逐字转录，`-q` 定向提问，`--region` 放大局部，多图一次调用可对比） |
+| `ground <image> "<target>"` | X 在哪（输出原图像素坐标的框） |
+| `detect <image> ["buttons"]` | 这类元素都有哪些（带可见文本与框的编号清单） |
+| `trace <image>` | 它的精确形状 / 尺寸 / 偏移（本地 VTracer，不调视觉 API；`--polygon` 给线框图） |
+| `crop <image> --region X1,Y1,X2,Y2` | 把一个框剪成独立图片文件（`-o` 指定输出，`--scale N` 放大） |
+| `palette <image> --region ...` | 这个区域的主色簇，以及候选色里哪个值最贴近（`--candidates`） |
+| `pixel-diff <a> <b>` | 两张图的差异在哪（差异百分比 + 最差区域框） |
+| `extract-fg <image> --region ...` | 把图标 / logo 前景抠成透明 PNG |
+| `long-ocr <image> -o out.md` | 长截图 / 滚动页 / 聊天记录的分块 OCR 与合并 |
+| `html-shot <page.html>` | 把 HTML 文件渲染成截图（需要本机有 headless Chrome/Chromium/Edge） |
+
+**场景层（`skills/<scene>/SKILL.md`，按意图自动路由）**
+
+| 用户说 | 场景 | 做法 |
+|---|---|---|
+| 「评审这个 UI / 设计反馈」 | `ui-feedback` | 多趟：glance 细节 → palette 配色 → detect 组件清单 → 结构化设计报告 |
+| 「把文字 / 表格提取出来」 | `ocr-extract` | 逐字 OCR；表格 → Markdown（prompt 强制「枚举每一张表，不许漏」）；长截图走 `long-ocr` |
+| 「读这个图的数据」 | `chart-reading` | 图表 → JSON（chartType/xAxis/series），网格线估读的值带 `estimate` 标记；建议 `VISION_TEMPERATURE=0` |
+| 其它任何图像问题 | `image-qa` | 描述 / 问答 / 定位 / 对比（glance + ground + pixel-diff） |
+
+新增场景：复制 `skills/_template/SKILL.md.template`，填六个块，在派发表加一行，用真图验证。
+
+## 关键约束与已知取舍（如实）
+
+- **多 provider 自动降级**：配多个 OpenAI 兼容端点（`VISION_EXTRA_PROVIDERS` + `VISION_PROVIDER_<NAME>_*`），
+  当前端点报错（限流 / 额度耗尽 / 宕机）自动切下一个；`VISION_RACE=1` 并发竞速，先给出有效答案的赢。
+- **只支持 PNG / JPEG / GIF / WebP**。
+- **小图会自动上采样**：最长边 < `VISION_MIN_UPSCALE`（默认 800）时用 LANCZOS 抬到 800，
+  所以小字 / 图标才读得出来；上采样是等比的，**坐标仍映射回原图像素**。设 `VISION_MIN_UPSCALE=0` 关闭。
+- **`ground` / `detect` 的坐标是真实像素**（模型侧是 0–1000 归一化网格，由工具换算；带 `--region` 时命中也映射回原图）。
+- **精度是实测的，不是宣称的**：带标注图表近乎精确（现代 VLM 在已知数据上 99–100%）；
+  **无标注图表的网格线估读有 ±2% 且系统性偏低**（一律标 `estimate`）；多表格页面若不强制枚举，
+  模型会**静默丢掉下面的表**（`ocr-extract` 模板就是为了修这个）。
+- **像素级事实不要问模型**：精确颜色、偏移、尺寸、差异一律取 `trace` / `ground` / `pixel-diff` / `palette`。
+- **`trace` 只适合扁平高对比图形**，文字会变成曲线；`html-shot` 依赖本机 Chrome/Edge，无 Python 依赖。
+- **`ground` 的序数描述不可靠**（「第 3 根柱子」可能匹配错），优先 `detect` 全枚举再筛。
+- **`long-ocr` 不是可选项**：整张长图走一次 OCR 会漏，它负责找低内容切带、分块调用、只合并重复的重叠区。
+- **密钥安全**：`.env` 已被 gitignore。公开推送前跑 `python scripts/secret_scan.py`
+  ——它扫全部受跟踪文件**以及整个 git 历史**（常见 key 格式、cookie、私钥、token），输出 `CLEAN` 或逐条列出待复核命中。
+
+## 文档索引
+
+- [README.md](./README.md) —— 主文档（英文）：架构、快速开始、场景用法、实测精度、项目布局、致谢
+- [README.zh-CN.md](./README.zh-CN.md) —— 中文说明
+- [references/scenes.md](./references/scenes.md) —— 场景派发表与触发短语
+- [references/providers.md](./references/providers.md) —— 端点配置、多 provider 降级与竞速
+- [references/accuracy.md](./references/accuracy.md) —— 实测精度与方法学
+- [references/pitfalls.md](./references/pitfalls.md) —— 已知踩坑
+- [skills/vision-core/SKILL.md](./skills/vision-core/SKILL.md) —— 内核 skill：每个工具怎么用、粗到细的流程、路由规则
+- [skills/ui-feedback/SKILL.md](./skills/ui-feedback/SKILL.md) · [skills/ocr-extract/SKILL.md](./skills/ocr-extract/SKILL.md) · [skills/chart-reading/SKILL.md](./skills/chart-reading/SKILL.md) · [skills/image-qa/SKILL.md](./skills/image-qa/SKILL.md) —— 四个场景 skill
+- [skills/_template/README.md](./skills/_template/README.md) —— 新增场景的四步
+- [tests/smoke_tests.md](./tests/smoke_tests.md) —— 冒烟测试：每个场景的真实命令与通过标准
+- [AGENTS.md](./AGENTS.md) —— 在此仓库开发时的约定（面向 coding agent）
+
+## Optional
+
+- [.env.example](./.env.example) —— 全部 `VISION_*` 环境变量（含超时、重试、温度、User-Agent/Origin、token 上限、上采样阈值）
+- [install.py](./install.py) —— 命令与 skill 的安装器（`--no-skills` / `--bin DIR` / `--dry-run`）
+- [requirements.txt](./requirements.txt) —— 可选依赖：pillow / numpy / vtracer 各自对应哪些工具
+- [skills/_template/SKILL.md.template](./skills/_template/SKILL.md.template) —— 新场景模板
+- [tests/make_test_fixtures.py](./tests/make_test_fixtures.py) —— 重建合成测试图
+- [tests/images/chart_barline.png](./tests/images/chart_barline.png) —— 快速开始用的样例图
+- [scripts/secret_scan.py](./scripts/secret_scan.py) —— 推送前的密钥扫描
+- [LICENSE](./LICENSE) —— 上游与本 fork 的双重版权声明
