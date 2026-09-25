@@ -1,16 +1,12 @@
 # ds-vision-kit
 
-Generic vision for text-only AI agents (DeepSeek, GLM, Claude Code on a
-text-only base, …): a **scene-agnostic vision core** + a **pluggable scene
-layer** of Claude Code skills.
+Your text-only coding agent can read code but gets stuck when the task includes a screenshot, chart or scanned page. Keep using that agent: this toolkit asks a configured vision model to turn the image into structured text it can reason over. It supports OCR, chart reading, UI review and image Q&A.
 
 [中文说明](README.zh-CN.md)
 
 ## What this is
 
-Most coding agents are excellent with text but blind to images. This repo is a
-"vision front-end": give it an image, get back structured text a text-only
-model can reason over.
+The toolkit pairs a general vision core with task-specific skills. The core handles image queries and pixel tools; the scene layer decides how to read a table, chart or UI and how to format the answer.
 
 It is organized as two layers:
 

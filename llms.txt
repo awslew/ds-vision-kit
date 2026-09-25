@@ -1,6 +1,6 @@
 # ds-vision-kit
 
-> 给**纯文本 AI agent**（DeepSeek、GLM、跑在纯文本底座上的 Claude Code 等）用的通用视觉前段：给一张图，拿回**结构化文本**让文本模型能推理。架构是两层——**scene-agnostic 的视觉内核**（`glance`/`ground`/`detect`/`trace`/`crop` + 本地像素工具）+ **可插拔的场景层**（每个场景一个 Claude Code skill）。它是 [Anionex/agent-vision-toolkit](https://github.com/Anionex/agent-vision-toolkit)（MIT）的 fork 与扩展。
+> DeepSeek、GLM 等纯文本 agent 遇到截图、图表或扫描页就无法继续？本工具借助你配置的视觉模型，把图片变成原 agent 可推理的结构化文字，支持 OCR、图表读取和 UI 检查；不必换掉整个工作流。底层通用识图，场景层可扩展。源自 [Anionex/agent-vision-toolkit](https://github.com/Anionex/agent-vision-toolkit)（MIT）。
 
 ## 项目定位
 
